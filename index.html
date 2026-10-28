@@ -1,0 +1,522 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zenkha Money</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#0b1411;color:#f0f7f3;min-height:100vh}
+header{padding:25px 7%;border-bottom:1px solid #24362d;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{background:#163d2e;color:#75f0b1;padding:12px;border-radius:13px;font-size:24px}
+h1{font-size:23px}h2{font-size:25px;margin-bottom:9px}h3{font-size:18px;margin-bottom:18px}
+.subtitle,.muted{color:#8ba69a;font-size:13px;margin-top:5px;line-height:1.6}
+.badge{color:#75f0b1;background:#163d2e;padding:9px 12px;border-radius:20px;font-size:12px}
+main{width:min(1100px,92%);margin:35px auto}
+.welcome{margin-bottom:25px}.welcome p{color:#8ba69a;line-height:1.6}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:25px}
+.panel{background:#13221b;border:1px solid #263d30;border-radius:18px;padding:23px;min-width:0}
+.panel-label{color:#a1b8aa;font-size:14px;margin-bottom:17px}
+.amount{font-size:clamp(21px,3vw,29px);font-weight:bold;overflow-wrap:anywhere}
+.green{color:#75f0b1}.red{color:#ff8c94}
+.layout{display:grid;grid-template-columns:1fr 1.2fr;gap:20px;margin-bottom:22px}
+label{display:block;color:#b7c9be;font-size:13px;margin:15px 0 8px}
+input,select{width:100%;padding:13px;border:1px solid #345041;border-radius:10px;background:#0b1711;color:white;font-size:15px;outline:none}
+input:focus,select:focus{border-color:#75f0b1}
+input[type=file]{font-size:13px;padding:10px}
+button{cursor:pointer;border:none;border-radius:10px;padding:12px 15px;font-size:13px;font-weight:bold;transition:.2s}
+button:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.primary{background:#75f0b1;color:#0b2016;width:100%;margin-top:20px}
+.secondary{background:#244434;color:#c9f8df}
+.edit{background:#1e3b4a;color:#a8e0ff}.delete{background:#382126;color:#ff9ba2}
+.transaction{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid #263d30}
+.transaction:last-child{border-bottom:none}
+.transaction-name{font-weight:bold;overflow-wrap:anywhere}
+.transaction-type{color:#8ba69a;font-size:12px;margin-top:5px}
+.transaction-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:7px}
+.transaction-actions button{padding:9px 10px}
+.empty{color:#8ba69a;line-height:1.7;font-size:14px}
+.section{margin-top:30px}
+.section-heading{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.goal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.goal-card{background:#13221b;border:1px solid #263d30;border-radius:18px;padding:22px;min-width:0}
+.goal-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.goal-name{font-size:17px;overflow-wrap:anywhere}.goal-emoji{font-size:27px}
+.goal-description{color:#8ba69a;font-size:13px;margin-top:8px}
+.goal-money{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:22px 0 12px}
+.goal-money strong{font-size:16px;overflow-wrap:anywhere}.goal-money span{color:#8ba69a;font-size:12px}
+.progress-track{height:10px;width:100%;background:#263d30;border-radius:20px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,#39c987,#9af5c4);border-radius:20px;transition:width .35s}
+.goal-progress-text{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:9px;color:#8ba69a;font-size:12px}
+.goal-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:18px}
+.goal-actions input{min-width:0}.goal-actions button{grid-column:1/-1}
+.goal-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:12px}
+.goal-footer button{font-size:12px;padding:9px 12px}
+.goal-form{margin-bottom:22px}.goal-form[hidden]{display:none}
+.goal-tip{margin-top:9px;padding:12px;border:1px solid #28543d;border-radius:10px;background:#10291d;color:#a9c9b5;font-size:12px;line-height:1.7}
+.goal-tip strong{color:#75f0b1}
+.goal-tip code{padding:3px 6px;border-radius:5px;background:#1b3b2a;color:#75f0b1}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.chart-panel{min-width:0}.chart-box{position:relative;height:280px;width:100%}
+.chart-note{font-size:12px;color:#8ba69a;line-height:1.6;margin-top:12px}
+.backup-panel{margin-top:22px}.backup-panel p{line-height:1.7}
+.backup-note{color:#8ba69a;font-size:12px;margin-top:12px}
+footer{color:#668071;text-align:center;padding:25px;font-size:12px}
+@media(max-width:750px){
+.summary,.layout,.goal-grid,.chart-grid{grid-template-columns:1fr}
+header{padding:20px 5%}main{margin-top:25px}
+.transaction{align-items:flex-start}.transaction>div:first-child{min-width:0}
+.chart-box{height:250px}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="brand"><div class="logo">◈</div><div><h1>ZENKHA <span class="green">MONEY</span></h1><p class="subtitle">Tu dinero, bajo tu control.</p></div></div>
+<span class="badge">● PERSONAL</span>
+</header>
+
+<main>
+<section class="welcome">
+<h2>Tu panel financiero 💚</h2>
+<p>Controla tus ingresos, gastos y metas de ahorro desde un solo lugar.</p>
+</section>
+
+<section class="summary">
+<div class="panel"><p class="panel-label">💰 Saldo disponible</p><p class="amount" id="balance">S/ 0.00</p></div>
+<div class="panel"><p class="panel-label">↗ Ingresos totales</p><p class="amount green" id="income">S/ 0.00</p></div>
+<div class="panel"><p class="panel-label">↘ Gastos totales</p><p class="amount red" id="expenses">S/ 0.00</p></div>
+</section>
+
+<section class="section">
+<div class="section-heading"><div><h2>📊 Estadísticas financieras</h2><p class="muted">Tus gráficos se actualizan con tus movimientos.</p></div></div>
+<div class="chart-grid">
+<div class="panel chart-panel">
+<h3>Ingresos vs. gastos</h3>
+<div class="chart-box"><canvas id="comparisonChart"></canvas></div>
+<p class="chart-note">Compara el dinero que recibes con el que gastas.</p>
+</div>
+<div class="panel chart-panel">
+<h3>Distribución de movimientos</h3>
+<div class="chart-box"><canvas id="distributionChart"></canvas></div>
+<p class="chart-note" id="distributionNote">Registra movimientos para ver tus estadísticas.</p>
+</div>
+<div class="panel chart-panel">
+<h3>Balance financiero</h3>
+<div class="chart-box"><canvas id="balanceChart"></canvas></div>
+<p class="chart-note">Tu saldo se calcula restando los gastos a los ingresos.</p>
+</div>
+<div class="panel chart-panel">
+<h3>Resumen numérico</h3>
+<p class="panel-label">Movimientos registrados</p><p class="amount" id="movementCount">0</p>
+<p class="panel-label" style="margin-top:20px">Promedio por movimiento</p><p class="amount" id="averageAmount">S/ 0.00</p>
+<p class="panel-label" style="margin-top:20px">Porcentaje de gastos sobre ingresos</p><p class="amount red" id="expenseRatio">—</p>
+</div>
+</div>
+</section>
+
+<section class="layout">
+<div class="panel">
+<h3>＋ Registrar movimiento</h3>
+<form id="transactionForm">
+<label for="description">Descripción</label><input id="description" type="text" placeholder="Ej. Propina, comida..." maxlength="60" required>
+<label for="amount">Monto (S/)</label><input id="amount" type="number" min="0.01" max="100000000" step="0.01" placeholder="0.00" required>
+<label for="type">Tipo de movimiento</label>
+<select id="type"><option value="income">Ingreso</option><option value="expense">Gasto</option></select>
+<button class="primary" type="submit">Guardar movimiento</button>
+</form>
+</div>
+<div class="panel"><h3>◷ Movimientos recientes</h3><div id="transactions"></div></div>
+</section>
+
+<section class="section">
+<div class="section-heading"><div><h2>🎯 Mis metas de ahorro</h2><p class="muted">Cada pequeño aporte te acerca a tu objetivo.</p></div><button class="primary" id="showGoalForm" type="button" style="width:auto;margin-top:0">＋ Nueva meta</button></div>
+
+<div class="panel goal-form" id="goalFormPanel" hidden>
+<h3>Crear una meta nueva</h3>
+<form id="goalForm">
+<label for="goalName">¿Para qué estás ahorrando?</label><input id="goalName" type="text" maxlength="50" placeholder="Ej. Una computadora" required>
+<label for="goalTarget">¿Cuánto necesitas? (S/)</label><input id="goalTarget" type="number" min="0.01" max="100000000" step="0.01" placeholder="Ej. 156000" required>
+<p class="goal-tip">💡 <strong>Consejo:</strong> Para una meta grande, escribe el monto sin puntos ni comas. Para S/ 156,000, escribe <code>156000</code>.</p>
+<label for="goalSaved">¿Cuánto tienes ahorrado ya? (S/)</label><input id="goalSaved" type="number" min="0" max="100000000" step="0.01" value="0" required>
+<label for="goalEmoji">Icono de tu meta</label>
+<select id="goalEmoji"><option value="💻">💻 Tecnología</option><option value="🎓">🎓 Estudios</option><option value="✈️">✈️ Viajes</option><option value="🎮">🎮 Videojuegos</option><option value="🚗">🚗 Vehículo</option><option value="💰">💰 Ahorro general</option><option value="🎯">🎯 Otra meta</option></select>
+<button class="primary" type="submit">Crear mi meta</button><button class="secondary" id="cancelGoal" type="button" style="width:100%;margin-top:10px">Cancelar</button>
+</form>
+</div>
+
+<div id="goalSummary" class="panel" style="margin-bottom:18px"><p class="panel-label">💚 Progreso total de tus metas</p><p class="amount green" id="totalSaved">S/ 0.00</p><p class="muted" id="totalGoalText">Crea tu primera meta para empezar.</p></div>
+<div class="goal-grid" id="goals"></div>
+
+<section class="panel backup-panel">
+<h3>🛡️ Copia de seguridad</h3><p class="muted">Guarda tus movimientos y metas en un archivo para poder recuperarlos cuando lo necesites.</p>
+<button class="primary" id="exportBackup" type="button">↓ Descargar copia de seguridad</button>
+<label for="importBackup">Selecciona tu archivo de copia de seguridad</label><input id="importBackup" type="file" accept=".json,application/json">
+<button class="secondary" id="restoreBackup" type="button" style="width:100%;margin-top:10px">Restaurar datos</button>
+<p class="backup-note">Restaurar una copia reemplaza los movimientos y metas actuales. Descarga una copia nueva antes de hacerlo si quieres conservarlos.</p>
+</section>
+</section>
+</main>
+<footer>Zenkha Money · Tus finanzas, más claras. 💚</footer>
+
+<script>
+"use strict";
+const TX_KEY="zenkhaMoneyTransactions";
+const GOAL_KEY="zenkhaMoneyGoals";
+const MAX_AMOUNT=100000000;
+const $=id=>document.getElementById(id);
+
+function readStorage(key){
+  try{const value=JSON.parse(localStorage.getItem(key)||"[]");return Array.isArray(value)?value:[]}
+  catch{return []}
+}
+function validTransaction(item){
+  return item&&typeof item.id==="string"&&typeof item.description==="string"&&
+    Number.isFinite(item.amount)&&item.amount>0&&item.amount<=MAX_AMOUNT&&
+    (item.type==="income"||item.type==="expense");
+}
+function validGoal(goal){
+  return goal&&typeof goal.id==="string"&&typeof goal.name==="string"&&
+    Number.isFinite(goal.target)&&goal.target>0&&goal.target<=MAX_AMOUNT&&
+    Number.isFinite(goal.saved)&&goal.saved>=0&&goal.saved<=MAX_AMOUNT&&
+    typeof goal.emoji==="string";
+}
+let transactions=readStorage(TX_KEY).filter(validTransaction);
+let goals=readStorage(GOAL_KEY).filter(validGoal);
+
+function money(value){
+  return value.toLocaleString("es-PE",{style:"currency",currency:"PEN"});
+}
+function createId(){
+  return typeof crypto!=="undefined"&&typeof crypto.randomUUID==="function"
+    ?crypto.randomUUID():String(Date.now())+"-"+Math.random().toString(16).slice(2);
+}
+function saveData(key,data){
+  try{localStorage.setItem(key,JSON.stringify(data));return true}
+  catch{alert("No se pudieron guardar los datos. Revisa el espacio disponible del navegador.");return false}
+}
+function saveTransactions(next){
+  if(!saveData(TX_KEY,next))return false;
+  transactions=next;return true;
+}
+function saveGoals(next){
+  if(!saveData(GOAL_KEY,next))return false;
+  goals=next;return true;
+}
+
+/* GRÁFICOS */
+let comparisonChart=null;
+let distributionChart=null;
+let balanceChart=null;
+
+function chartDefaults(){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{color:"#d9e9df",padding:18}},
+      tooltip:{callbacks:{label:context=>context.dataset.label+": "+money(Number(context.raw)||0)}}
+    },
+    scales:{
+      x:{ticks:{color:"#a1b8aa"},grid:{color:"rgba(139,166,154,.10)"}},
+      y:{beginAtZero:true,ticks:{color:"#a1b8aa",callback:value=>"S/ "+Number(value).toLocaleString("es-PE")},grid:{color:"rgba(139,166,154,.15)"}}
+    }
+  };
+}
+function renderCharts(){
+  const income=transactions.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+  const expenses=transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
+  const balance=income-expenses;
+  const common=chartDefaults();
+
+  if(typeof Chart==="undefined"){
+    $("distributionNote").textContent="No se pudo cargar la librería de gráficos. Comprueba tu conexión a internet.";
+    return;
+  }
+
+  if(comparisonChart)comparisonChart.destroy();
+  comparisonChart=new Chart($("comparisonChart"),{
+    type:"bar",
+    data:{labels:["Ingresos","Gastos"],datasets:[{
+      label:"Monto",
+      data:[income,expenses],
+      backgroundColor:["#75f0b1","#ff8c94"],
+      borderRadius:8,
+      maxBarThickness:65
+    }]},
+    options:common
+  });
+
+  if(distributionChart)distributionChart.destroy();
+  distributionChart=new Chart($("distributionChart"),{
+    type:"doughnut",
+    data:{labels:["Ingresos","Gastos"],datasets:[{
+      data:[income,expenses],
+      backgroundColor:["#75f0b1","#ff8c94"],
+      borderColor:["#13221b","#13221b"],
+      borderWidth:4,
+      hoverOffset:8
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:"62%",
+      plugins:{legend:{position:"bottom",labels:{color:"#d9e9df",padding:18}},
+        tooltip:{callbacks:{label:context=>context.label+": "+money(Number(context.raw)||0)}}}
+    }
+  });
+
+  if(balanceChart)balanceChart.destroy();
+  balanceChart=new Chart($("balanceChart"),{
+    type:"bar",
+    data:{labels:["Balance"],datasets:[{
+      label:"Saldo",
+      data:[balance],
+      backgroundColor:[balance>=0?"#75f0b1":"#ff8c94"],
+      borderRadius:8,
+      maxBarThickness:65
+    }]},
+    options:{
+      ...common,
+      scales:{...common.scales,y:{...common.scales.y,beginAtZero:true}}
+    }
+  });
+
+  $("distributionNote").textContent=income===0&&expenses===0
+    ?"Aún no hay movimientos para comparar."
+    :"Ingresos: "+money(income)+" · Gastos: "+money(expenses);
+  $("movementCount").textContent=String(transactions.length);
+  $("averageAmount").textContent=money(transactions.length
+    ?transactions.reduce((s,t)=>s+t.amount,0)/transactions.length:0);
+  $("expenseRatio").textContent=income>0
+    ?(expenses/income*100).toLocaleString("es-PE",{maximumFractionDigits:1})+"%"
+    :expenses>0?"Sin ingresos":"—";
+}
+
+function editTransaction(item){
+  const description=prompt("Edita la descripción:",item.description);
+  if(description===null)return;
+  const cleanDescription=description.trim();
+  if(!cleanDescription||cleanDescription.length>60){alert("La descripción debe tener entre 1 y 60 caracteres.");return}
+  const amountText=prompt("Edita el monto en soles:",String(item.amount));
+  if(amountText===null)return;
+  const amount=Number(amountText);
+  if(!Number.isFinite(amount)||amount<=0||amount>MAX_AMOUNT){alert("Introduce un monto válido mayor que cero.");return}
+  const type=prompt("Escribe ingreso o gasto:",item.type==="income"?"ingreso":"gasto");
+  if(type===null)return;
+  const normalized=type.trim().toLowerCase();
+  const finalType=["ingreso","income"].includes(normalized)?"income":
+    ["gasto","expense"].includes(normalized)?"expense":null;
+  if(!finalType){alert("Escribe «ingreso» o «gasto».");return}
+  const next=transactions.map(tx=>tx.id===item.id
+    ?{...tx,description:cleanDescription,amount:Math.round(amount*100)/100,type:finalType}:tx);
+  if(saveTransactions(next)){renderTransactions();renderCharts()}
+}
+
+function renderTransactions(){
+  const income=transactions.filter(t=>t.type==="income").reduce((s,t)=>s+t.amount,0);
+  const expenses=transactions.filter(t=>t.type==="expense").reduce((s,t)=>s+t.amount,0);
+  $("balance").textContent=money(income-expenses);
+  $("income").textContent=money(income);
+  $("expenses").textContent=money(expenses);
+  $("transactions").replaceChildren();
+
+  if(!transactions.length){
+    const empty=document.createElement("p");
+    empty.className="empty";
+    empty.textContent="Todavía no tienes movimientos. Registra tu primer ingreso o gasto.";
+    $("transactions").appendChild(empty);
+    return;
+  }
+
+  [...transactions].reverse().forEach(item=>{
+    const row=document.createElement("div");row.className="transaction";
+    const info=document.createElement("div");
+    const name=document.createElement("p");name.className="transaction-name";name.textContent=item.description;
+    const detail=document.createElement("p");detail.className="transaction-type";
+    detail.textContent=(item.type==="income"?"Ingreso":"Gasto")+(item.date?" · "+item.date:"");
+    info.append(name,detail);
+    const actions=document.createElement("div");actions.className="transaction-actions";
+    const amount=document.createElement("strong");amount.className=item.type==="income"?"green":"red";
+    amount.textContent=(item.type==="income"?"+":"−")+money(item.amount);
+    const edit=document.createElement("button");edit.className="edit";edit.type="button";edit.textContent="✏️ Editar";
+    edit.addEventListener("click",()=>editTransaction(item));
+    const remove=document.createElement("button");remove.className="delete";remove.type="button";remove.textContent="Eliminar";
+    remove.addEventListener("click",()=>{
+      if(!confirm("¿Eliminar este movimiento?"))return;
+      if(saveTransactions(transactions.filter(tx=>tx.id!==item.id))){renderTransactions();renderCharts()}
+    });
+    actions.append(amount,edit,remove);row.append(info,actions);$("transactions").appendChild(row);
+  });
+}
+
+$("transactionForm").addEventListener("submit",event=>{
+  event.preventDefault();
+  const description=$("description").value.trim();
+  const amount=Number($("amount").value);
+  const type=$("type").value;
+  if(!description||!Number.isFinite(amount)||amount<=0||amount>MAX_AMOUNT){alert("Revisa la descripción y el monto.");return}
+  const next=[...transactions,{id:createId(),description,amount:Math.round(amount*100)/100,type,date:new Date().toLocaleDateString("es-PE")}];
+  if(saveTransactions(next)){
+    $("transactionForm").reset();renderTransactions();renderCharts();
+  }
+});
+
+function editGoal(goal){
+  const name=prompt("Edita el nombre de tu meta:",goal.name);
+  if(name===null)return;
+  const cleanName=name.trim();
+  if(!cleanName||cleanName.length>50){alert("El nombre debe tener entre 1 y 50 caracteres.");return}
+  const targetText=prompt("Edita el monto objetivo en soles:",String(goal.target));
+  if(targetText===null)return;
+  const target=Number(targetText);
+  if(!Number.isFinite(target)||target<=0||target>MAX_AMOUNT){alert("Introduce un objetivo válido mayor que cero.");return}
+  const savedText=prompt("Edita cuánto llevas ahorrado en soles:",String(goal.saved));
+  if(savedText===null)return;
+  const saved=Number(savedText);
+  if(!Number.isFinite(saved)||saved<0||saved>MAX_AMOUNT){alert("Introduce un ahorro válido.");return}
+  const emoji=prompt("Elige el icono de tu meta: 💻 🎓 ✈️ 🎮 🚗 💰 🎯",goal.emoji);
+  if(emoji===null)return;
+  const next=goals.map(item=>item.id===goal.id?{
+    ...item,name:cleanName,target:Math.round(target*100)/100,
+    saved:Math.round(saved*100)/100,emoji:emoji.trim()||"🎯"
+  }:item);
+  if(saveGoals(next))renderGoals();
+}
+
+function renderGoals(){
+  $("goals").replaceChildren();
+  const savedTotal=goals.reduce((s,g)=>s+g.saved,0);
+  const targetTotal=goals.reduce((s,g)=>s+g.target,0);
+  $("totalSaved").textContent=money(savedTotal);
+  $("totalGoalText").textContent=goals.length
+    ?money(savedTotal)+" acumulados de "+money(targetTotal)+" en "+goals.length+(goals.length===1?" meta.":" metas.")
+    :"Crea tu primera meta para empezar.";
+
+  if(!goals.length){
+    const empty=document.createElement("div");empty.className="panel empty";
+    empty.textContent="Todavía no tienes metas. Pulsa «Nueva meta» para crear tu primer objetivo de ahorro.";
+    $("goals").appendChild(empty);return;
+  }
+
+  goals.forEach(goal=>{
+    const progress=Math.min(100,goal.saved/goal.target*100);
+    const completed=goal.saved>=goal.target;
+    const card=document.createElement("article");card.className="goal-card";
+    const top=document.createElement("div");top.className="goal-top";
+    const titleBox=document.createElement("div");
+    const title=document.createElement("h3");title.className="goal-name";title.textContent=goal.name;
+    const description=document.createElement("p");description.className="goal-description";
+    description.textContent=completed?"¡Meta completada! 🎉":"¡Sigue avanzando hacia tu objetivo!";
+    titleBox.append(title,description);
+    const emoji=document.createElement("span");emoji.className="goal-emoji";emoji.textContent=goal.emoji;
+    top.append(titleBox,emoji);
+
+    const moneyRow=document.createElement("div");moneyRow.className="goal-money";
+    const savedBox=document.createElement("div");
+    const savedLabel=document.createElement("span");savedLabel.textContent="Ahorrado";
+    const savedAmount=document.createElement("strong");savedAmount.className="green";savedAmount.style.display="block";savedAmount.textContent=money(goal.saved);
+    savedBox.append(savedLabel,savedAmount);
+    const targetBox=document.createElement("div");targetBox.style.textAlign="right";
+    const targetLabel=document.createElement("span");targetLabel.textContent="Objetivo";
+    const targetAmount=document.createElement("strong");targetAmount.style.display="block";targetAmount.textContent=money(goal.target);
+    targetBox.append(targetLabel,targetAmount);moneyRow.append(savedBox,targetBox);
+
+    const track=document.createElement("div");track.className="progress-track";track.setAttribute("role","progressbar");
+    track.setAttribute("aria-label","Progreso de "+goal.name);track.setAttribute("aria-valuemin","0");
+    track.setAttribute("aria-valuemax","100");track.setAttribute("aria-valuenow",String(Math.round(progress)));
+    const bar=document.createElement("div");bar.className="progress-bar";bar.style.width=progress+"%";track.appendChild(bar);
+    const progressText=document.createElement("div");progressText.className="goal-progress-text";
+    const percent=document.createElement("span");percent.textContent=Math.round(progress)+"% completado";
+    const remaining=document.createElement("span");remaining.textContent=completed?"Objetivo alcanzado":"Faltan "+money(Math.max(0,goal.target-goal.saved));
+    progressText.append(percent,remaining);
+
+    const actions=document.createElement("form");actions.className="goal-actions";
+    const contribution=document.createElement("input");contribution.type="number";contribution.min="0.01";
+    contribution.max=String(MAX_AMOUNT);contribution.step="0.01";contribution.placeholder="Aporte en S/";
+    contribution.setAttribute("aria-label","Aporte para "+goal.name);contribution.required=true;
+    const contributeButton=document.createElement("button");contributeButton.className="primary";
+    contributeButton.style.marginTop="0";contributeButton.textContent="＋ Añadir aporte";
+    actions.append(contribution,contributeButton);
+    actions.addEventListener("submit",event=>{
+      event.preventDefault();const amount=Number(contribution.value);
+      if(!Number.isFinite(amount)||amount<=0||amount>MAX_AMOUNT){alert("Introduce un aporte válido.");return}
+      const updatedGoal=goals.find(item=>item.id===goal.id);
+      const newSaved=Math.round((updatedGoal.saved+amount)*100)/100;
+      if(!Number.isFinite(newSaved)||newSaved>MAX_AMOUNT){alert("Ese aporte supera el límite permitido.");return}
+      if(saveGoals(goals.map(item=>item.id===goal.id?{...item,saved:newSaved}:item)))renderGoals();
+    });
+
+    const footer=document.createElement("div");footer.className="goal-footer";
+    const edit=document.createElement("button");edit.className="edit";edit.type="button";edit.textContent="✏️ Editar meta";
+    edit.addEventListener("click",()=>editGoal(goal));
+    const remove=document.createElement("button");remove.className="delete";remove.type="button";remove.textContent="Eliminar meta";
+    remove.addEventListener("click",()=>{
+      if(!confirm("¿Quieres eliminar la meta «"+goal.name+"»?"))return;
+      if(saveGoals(goals.filter(item=>item.id!==goal.id)))renderGoals();
+    });
+    footer.append(edit,remove);card.append(top,moneyRow,track,progressText,actions,footer);
+    $("goals").appendChild(card);
+  });
+}
+
+$("showGoalForm").addEventListener("click",()=>{
+  $("goalFormPanel").hidden=!$("goalFormPanel").hidden;
+  if(!$("goalFormPanel").hidden){
+    $("goalName").focus();$("goalFormPanel").scrollIntoView({behavior:"smooth",block:"center"});
+  }
+});
+$("cancelGoal").addEventListener("click",()=>{$("goalFormPanel").hidden=true;$("goalForm").reset()});
+$("goalForm").addEventListener("submit",event=>{
+  event.preventDefault();
+  const name=$("goalName").value.trim(),target=Number($("goalTarget").value);
+  const saved=Number($("goalSaved").value),emoji=$("goalEmoji").value;
+  if(!name||!Number.isFinite(target)||target<=0||target>MAX_AMOUNT||
+     !Number.isFinite(saved)||saved<0||saved>MAX_AMOUNT){alert("Revisa el nombre y los montos de tu meta.");return}
+  const next=[...goals,{id:createId(),name,target:Math.round(target*100)/100,saved:Math.round(saved*100)/100,emoji}];
+  if(saveGoals(next)){$("goalForm").reset();$("goalFormPanel").hidden=true;renderGoals()}
+});
+
+$("exportBackup").addEventListener("click",()=>{
+  const backup={app:"Zenkha Money",version:1,exportedAt:new Date().toISOString(),transactions,goals};
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");link.href=url;link.download="zenkha-money-backup.json";
+  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+
+$("restoreBackup").addEventListener("click",async()=>{
+  const file=$("importBackup").files[0];
+  if(!file){alert("Primero selecciona tu archivo de copia de seguridad.");return}
+  try{
+    const backup=JSON.parse(await file.text());
+    if(!backup||backup.app!=="Zenkha Money"||backup.version!==1||
+       !Array.isArray(backup.transactions)||!Array.isArray(backup.goals)){
+      alert("El archivo no es una copia de seguridad válida de Zenkha Money.");return;
+    }
+    if(!backup.transactions.every(validTransaction)||!backup.goals.every(validGoal)){
+      alert("La copia contiene datos incorrectos. No se modificó tu información actual.");return;
+    }
+    if(!confirm("¿Restaurar esta copia? Tus movimientos y metas actuales serán reemplazados."))return;
+    const oldTransactions=localStorage.getItem(TX_KEY),oldGoals=localStorage.getItem(GOAL_KEY);
+    try{
+      localStorage.setItem(TX_KEY,JSON.stringify(backup.transactions));
+      localStorage.setItem(GOAL_KEY,JSON.stringify(backup.goals));
+    }catch(error){
+      try{
+        if(oldTransactions===null)localStorage.removeItem(TX_KEY);else localStorage.setItem(TX_KEY,oldTransactions);
+        if(oldGoals===null)localStorage.removeItem(GOAL_KEY);else localStorage.setItem(GOAL_KEY,oldGoals);
+      }catch{}
+      throw error;
+    }
+    alert("¡Copia restaurada correctamente! Se actualizará la página.");location.reload();
+  }catch{alert("No se pudo restaurar el archivo. Comprueba que sea una copia válida de Zenkha Money.")}
+});
+
+renderTransactions();
+renderGoals();
+renderCharts();
+</script>
+</body>
+</html>
